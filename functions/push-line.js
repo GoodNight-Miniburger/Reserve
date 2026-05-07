@@ -1,14 +1,10 @@
-exports.handler = async function(event) {
-  if(event.httpMethod !== 'POST'){
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
-
+export async function onRequestPost(context) {
   const LINE_TOKEN = 'wilVYmOc+LsK6O6b765EsPpUruqs4mUZAVtSGcdEu3J9xt+CbxdkpqxH066zcJzgtrLULb2/HiVLpeYfrPLMfe48iW7tteA3S9blGZwfG/4QHqhnSXX5tWdMM9uo8eu2xgVPcHeXnBSqfCD3KKutFgdB04t89/1O/w1cDnyilFU=';
 
   try {
-    const { userId, message } = JSON.parse(event.body);
-    if(!userId || !message){
-      return { statusCode: 400, body: 'Missing userId or message' };
+    const { userId, message } = await context.request.json();
+    if (!userId || !message) {
+      return new Response('Missing userId or message', { status: 400 });
     }
 
     const res = await fetch('https://api.line.me/v2/bot/message/push', {
@@ -24,12 +20,24 @@ exports.handler = async function(event) {
     });
 
     const data = await res.json();
-    return {
-      statusCode: res.ok ? 200 : 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify(data)
-    };
-  } catch(e) {
-    return { statusCode: 500, body: e.message };
+    return new Response(JSON.stringify(data), {
+      status: res.ok ? 200 : 400,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  } catch (e) {
+    return new Response(e.message, { status: 500 });
   }
-};
+}
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
+}
