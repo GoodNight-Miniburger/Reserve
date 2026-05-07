@@ -1,8 +1,24 @@
-export async function onRequestPost(context) {
+export async function onRequest(context) {
+  const request = context.request;
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
+    });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+
   const LINE_TOKEN = 'wilVYmOc+LsK6O6b765EsPpUruqs4mUZAVtSGcdEu3J9xt+CbxdkpqxH066zcJzgtrLULb2/HiVLpeYfrPLMfe48iW7tteA3S9blGZwfG/4QHqhnSXX5tWdMM9uo8eu2xgVPcHeXnBSqfCD3KKutFgdB04t89/1O/w1cDnyilFU=';
 
   try {
-    const { userId, message } = await context.request.json();
+    const { userId, message } = await request.json();
     if (!userId || !message) {
       return new Response('Missing userId or message', { status: 400 });
     }
@@ -30,14 +46,4 @@ export async function onRequestPost(context) {
   } catch (e) {
     return new Response(e.message, { status: 500 });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
-  });
 }
